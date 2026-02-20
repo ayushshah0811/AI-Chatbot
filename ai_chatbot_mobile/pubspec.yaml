@@ -1,0 +1,86 @@
+name: ai_chatbot_mobile
+description: AI Chatbot Mobile Client
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.0
+  flutter: ^3.41.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  flutter_riverpod: ^3.2.1
+  riverpod_annotation: ^4.0.2
+  
+  # Networking
+  dio: ^5.9.1
+  
+  # Storage
+  flutter_secure_storage: ^10.0.0
+  
+  # Navigation
+  go_router: ^17.1.0
+  
+  # Theming
+  flex_color_scheme: ^8.4.0
+  google_fonts: ^6.2.1
+  
+  # Animations
+  flutter_animate: ^4.5.2
+  
+  # Markdown
+  flutter_markdown: ^0.7.4
+  markdown: ^7.3.0
+  
+  # Code Highlighting
+  flutter_highlight: ^0.7.0
+  highlight: ^0.7.0
+  
+  # Utilities
+  uuid: ^4.5.1
+  excel: ^4.0.6
+  share_plus: ^10.1.4
+  path_provider: ^2.1.5
+  url_launcher: ^6.3.1
+  
+  # Freezed Annotations (runtime)
+  freezed_annotation: ^3.0.0
+  json_annotation: ^4.10.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  
+  # Code Generation
+  build_runner: ^2.4.14
+  riverpod_generator: ^4.0.3
+  freezed: ^3.2.5
+  json_serializable: ^6.12.0
+  mockito: ^5.4.5
+  build_verify: ^3.1.0
+  
+  # Launcher Icon
+  flutter_launcher_icons: ^0.14.3
+
+# Launcher icon configuration
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/Image.jpg"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/Image.jpg"
+  web:
+    generate: true
+    image_path: "assets/images/Image.jpg"
+    background_color: "#FFFFFF"
+    theme_color: "#E91E63"
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/

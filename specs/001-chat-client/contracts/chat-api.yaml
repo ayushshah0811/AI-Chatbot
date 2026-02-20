@@ -1,0 +1,200 @@
+openapi: 3.0.3
+info:
+  title: AI Chatbot API
+  description: |
+    Backend API for AI Chatbot mobile client.
+    This API is EXISTING - the mobile app consumes these endpoints as-is.
+  version: 1.0.0
+  contact:
+    name: AI Chatbot Team
+
+servers:
+  - url: http://{host}:3978
+    description: Configurable backend server
+    variables:
+      host:
+        default: localhost
+        description: Backend host IP or hostname
+
+paths:
+  /api/chat:
+    post:
+      operationId: sendMessage
+      summary: Send a chat message and receive streaming response
+      description: |
+        Sends a user message to the AI backend and receives a streaming response
+        using Server-Sent Events (SSE) format. The response streams text chunks
+        progressively until completion.
+      tags:
+        - Chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            example:
+              message: "What is the status of order 12345?"
+              userId: "550e8400-e29b-41d4-a716-446655440000"
+              conversationId: "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+              targetApp: "STS_LP"
+      responses:
+        '200':
+          description: Streaming SSE response
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: |
+                data: The order
+                data:  12345 is
+                data:  currently in
+                data:  transit.
+                data: [DONE]
+        '400':
+          description: Bad request - invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/chat/history/{userId}:
+    get:
+      operationId: getChatHistory
+      summary: Get chat history for a user
+      description: |
+        Retrieves all previous chat messages for the specified user.
+        Messages are returned in chronological order.
+      tags:
+        - Chat
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Chat history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatHistoryResponse'
+        '404':
+          description: User not found or no history available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+        - userId
+        - conversationId
+        - targetApp
+      properties:
+        message:
+          type: string
+          description: The user's message text
+          minLength: 1
+          example: "What is the status of order 12345?"
+        userId:
+          type: string
+          format: uuid
+          description: Unique identifier for the user
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        conversationId:
+          type: string
+          format: uuid
+          description: |
+            Unique identifier for the conversation session.
+            Must be regenerated when starting a new chat or switching target app.
+          example: "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+        targetApp:
+          type: string
+          description: Target application context for the chat
+          enum:
+            - STS_LP
+            - TMS
+            - QMS
+          example: "STS_LP"
+
+    ChatHistoryResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatHistoryItem'
+          description: List of chat messages in chronological order
+
+    ChatHistoryItem:
+      type: object
+      required:
+        - id
+        - content
+        - sender
+        - timestamp
+        - conversationId
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique message identifier
+          example: "a3bb189e-8bf9-3888-9912-ace4e6543002"
+        content:
+          type: string
+          description: Message content (may contain markdown)
+          example: "The order 12345 is currently in transit."
+        sender:
+          type: string
+          enum:
+            - user
+            - bot
+          description: Who sent the message
+          example: "bot"
+        timestamp:
+          type: string
+          format: date-time
+          description: When the message was sent
+          example: "2026-02-16T10:30:00Z"
+        conversationId:
+          type: string
+          format: uuid
+          description: Conversation this message belongs to
+          example: "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Invalid request parameters"
+        code:
+          type: string
+          description: Error code
+          example: "BAD_REQUEST"
+
+tags:
+  - name: Chat
+    description: Chat messaging operations
