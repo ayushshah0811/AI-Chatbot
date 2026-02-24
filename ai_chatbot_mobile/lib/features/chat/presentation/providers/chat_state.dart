@@ -43,11 +43,16 @@ abstract class ChatState with _$ChatState {
 
   /// Creates the initial state with defaults.
   ///
-  /// No active conversation, default target app (STS_LP), not streaming,
+  /// No active conversation, default target app, not streaming,
   /// send enabled.
   factory ChatState.initial() => const ChatState(
     activeConversation: null,
-    selectedTargetApp: TargetApp(id: 'STS_LP', displayName: 'STS LP'),
+    // TODO: Restore original default after testing
+    // selectedTargetApp: TargetApp(id: 'STS_LP', displayName: 'STS LP'),
+    selectedTargetApp: TargetApp(
+      id: 'biznet_ctm_intas',
+      displayName: 'Biznet CTM Intas',
+    ),
     isStreaming: false,
     isSendEnabled: true,
   );

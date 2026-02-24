@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/design_tokens.dart';
 
-/// Modern floating input bar with 30px radius and circular send button.
+/// Premium floating input bar with gradient send button.
 ///
-/// Uses surfaceContainer color with no harsh borders. The send button
-/// floats as a circle transitioning from muted to primary + glow when active.
+/// Uses surfaceContainer color with subtle border. The send button
+/// transitions from muted to a vibrant gradient glow when text is entered.
 class MessageInput extends StatefulWidget {
   const MessageInput({
     required this.onSend,
@@ -84,7 +85,14 @@ class _MessageInputState extends State<MessageInput>
 
     widget.onSend(text);
     _controller.clear();
-    _focusNode.requestFocus();
+    // Re-request focus after a frame to avoid the Flutter web DOM
+    // assertion ("The DOM element of this text editing strategy is
+    // not currently active.") that occurs when the widget tree
+    // rebuilds while the field still holds focus.
+    _focusNode.unfocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusNode.requestFocus();
+    });
   }
 
   bool get _canSend => widget.enabled && _hasText;
@@ -110,9 +118,12 @@ class _MessageInputState extends State<MessageInput>
                   color: theme.colorScheme.surfaceContainer,
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color: theme.colorScheme.outlineVariant.withValues(
-                      alpha: 0.5,
-                    ),
+                    color: _focusNode.hasFocus
+                        ? theme.colorScheme.primary.withValues(alpha: 0.3)
+                        : theme.colorScheme.outlineVariant.withValues(
+                            alpha: 0.3,
+                          ),
+                    width: _focusNode.hasFocus ? 1.0 : 0.5,
                   ),
                 ),
                 child: TextField(
@@ -152,21 +163,11 @@ class _MessageInputState extends State<MessageInput>
 
             SizedBox(width: DesignTokens.spacing.sm),
 
-            // ── Floating circular send button ──
+            // ── Floating gradient send button ──
             AnimatedBuilder(
               animation: _sendButtonAnim,
               builder: (context, child) {
                 final progress = _sendButtonAnim.value;
-                final bgColor = Color.lerp(
-                  theme.colorScheme.surfaceContainerHigh,
-                  theme.colorScheme.primary,
-                  progress,
-                )!;
-                final fgColor = Color.lerp(
-                  theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                  theme.colorScheme.onPrimary,
-                  progress,
-                )!;
 
                 return Padding(
                   padding: EdgeInsets.only(bottom: DesignTokens.spacing.xxs),
@@ -174,16 +175,19 @@ class _MessageInputState extends State<MessageInput>
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: bgColor,
                       shape: BoxShape.circle,
+                      gradient: _canSend ? AppTheme.accentGradient : null,
+                      color: _canSend
+                          ? null
+                          : theme.colorScheme.surfaceContainerHigh,
                       boxShadow: _canSend
                           ? [
                               BoxShadow(
                                 color: theme.colorScheme.primary.withValues(
-                                  alpha: 0.3,
+                                  alpha: 0.35 * progress,
                                 ),
-                                blurRadius: 12,
-                                offset: const Offset(0, 3),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4),
                               ),
                             ]
                           : null,
@@ -196,7 +200,11 @@ class _MessageInputState extends State<MessageInput>
                         child: Center(
                           child: Icon(
                             Icons.arrow_upward_rounded,
-                            color: fgColor,
+                            color: _canSend
+                                ? Colors.white
+                                : theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.3,
+                                  ),
                             size: 22,
                           ),
                         ),

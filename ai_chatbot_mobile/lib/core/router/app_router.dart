@@ -1,27 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/chat/presentation/screens/chat_screen.dart';
 
 /// Application route paths.
 class AppRoutes {
   AppRoutes._();
 
-  /// Home / Chat screen path.
-  static const String chat = '/';
+  /// Login screen path (initial route).
+  static const String login = '/';
+
+  /// Chat screen path.
+  static const String chat = '/chat';
 
   /// Named route identifiers.
+  static const String loginName = 'login';
   static const String chatName = 'chat';
 }
 
 /// GoRouter configuration for the application.
 ///
-/// Currently a single-screen app with the chat screen as the home route.
-/// Designed to be extended with additional routes as needed.
+/// Login screen is the initial route. After successful authentication
+/// the user is navigated to the chat screen.
 final GoRouter appRouter = GoRouter(
-  initialLocation: AppRoutes.chat,
+  initialLocation: AppRoutes.login,
   debugLogDiagnostics: true,
   routes: [
+    GoRoute(
+      path: AppRoutes.login,
+      name: AppRoutes.loginName,
+      builder: (context, state) => const LoginScreen(),
+    ),
     GoRoute(
       path: AppRoutes.chat,
       name: AppRoutes.chatName,

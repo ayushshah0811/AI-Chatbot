@@ -1,18 +1,22 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/app_constants.dart';
 
-/// Abstraction layer over [FlutterSecureStorage] for persisting sensitive data.
+/// Abstraction layer over [SharedPreferences] for persisting app data.
 ///
-/// Stores JWT tokens, conversation IDs, and user IDs securely using
-/// platform-native secure storage (Keychain on iOS, EncryptedSharedPreferences
-/// on Android).
+/// Stores JWT tokens, conversation IDs, and user IDs using
+/// SharedPreferences (localStorage on web, SharedPreferences on Android).
+/// Replaces flutter_secure_storage to avoid Web Crypto OperationError issues.
 class SecureStorageService {
-  SecureStorageService({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+  SecureStorageService();
 
-  final FlutterSecureStorage _storage;
+  /// Lazy-loaded SharedPreferences instance.
+  SharedPreferencesAsync? _prefs;
+
+  Future<SharedPreferencesAsync> get _storage async {
+    return _prefs ??= SharedPreferencesAsync();
+  }
 
   // ── JWT Token ───────────────────────────────────────────────────────────
 
@@ -82,7 +86,8 @@ class SecureStorageService {
   /// Clears all stored data. Use with caution.
   Future<void> clearAll() async {
     try {
-      await _storage.deleteAll();
+      final prefs = await _storage;
+      await prefs.clear();
     } catch (e) {
       debugPrint('SecureStorageService: Failed to clear all: $e');
     }
@@ -91,7 +96,9 @@ class SecureStorageService {
   /// Checks whether any value is stored for the given [key].
   Future<bool> containsKey(String key) async {
     try {
-      return await _storage.containsKey(key: key);
+      final prefs = await _storage;
+      final value = await prefs.getString(key);
+      return value != null;
     } catch (e) {
       debugPrint('SecureStorageService: Failed to check key "$key": $e');
       return false;
@@ -102,7 +109,8 @@ class SecureStorageService {
 
   Future<void> _write(String key, String value) async {
     try {
-      await _storage.write(key: key, value: value);
+      final prefs = await _storage;
+      await prefs.setString(key, value);
     } catch (e) {
       debugPrint('SecureStorageService: Failed to write "$key": $e');
     }
@@ -110,7 +118,8 @@ class SecureStorageService {
 
   Future<String?> _read(String key) async {
     try {
-      return await _storage.read(key: key);
+      final prefs = await _storage;
+      return await prefs.getString(key);
     } catch (e) {
       debugPrint('SecureStorageService: Failed to read "$key": $e');
       return null;
@@ -119,7 +128,8 @@ class SecureStorageService {
 
   Future<void> _delete(String key) async {
     try {
-      await _storage.delete(key: key);
+      final prefs = await _storage;
+      await prefs.remove(key);
     } catch (e) {
       debugPrint('SecureStorageService: Failed to delete "$key": $e');
     }

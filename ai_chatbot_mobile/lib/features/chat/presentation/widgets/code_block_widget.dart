@@ -134,7 +134,7 @@ class _CodeHeader extends StatelessWidget {
                 language.toLowerCase(),
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: const Color(0xFF89B4FA), // Catppuccin blue
+                  color: const Color(0xFF818CF8), // Indigo accent
                   fontSize: 10,
                   letterSpacing: 0.5,
                 ),
@@ -159,14 +159,14 @@ class _CodeHeader extends StatelessWidget {
                     copied ? Icons.check_rounded : Icons.copy_rounded,
                     size: DesignTokens.iconSize.xs,
                     color: copied
-                        ? const Color(0xFFA6E3A1) // Catppuccin green
+                        ? const Color(0xFF34D399) // Teal success
                         : Colors.white54,
                   ),
                   SizedBox(width: DesignTokens.spacing.xxs),
                   Text(
                     copied ? 'Copied!' : 'Copy',
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: copied ? const Color(0xFFA6E3A1) : Colors.white54,
+                      color: copied ? const Color(0xFF34D399) : Colors.white54,
                       fontSize: 11,
                     ),
                   ),

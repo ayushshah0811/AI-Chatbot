@@ -19,7 +19,7 @@ class PauseButton extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: DesignTokens.spacing.xxs),
         child: TextButton.icon(
           onPressed: onPressed,
-          icon: Icon(Icons.stop_rounded, size: DesignTokens.iconSize.sm),
+          icon: Icon(Icons.stop_circle_rounded, size: DesignTokens.iconSize.md),
           label: const Text('Stop generating'),
           style: TextButton.styleFrom(
             foregroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.6),

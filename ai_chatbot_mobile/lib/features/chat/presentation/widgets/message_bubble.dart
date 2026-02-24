@@ -10,11 +10,10 @@ import 'inline_thinking_dots.dart';
 import 'markdown_renderer.dart';
 import 'rephrase_button.dart';
 
-/// Modern 2026 chat bubble with 26px rounded corners, 16px internal padding,
-/// and proper Material 3 surface hierarchy.
+/// Modern chat bubble with layered surfaces and clear user/bot distinction.
 ///
-/// User: right-aligned, primaryContainer fill.
-/// Bot: left-aligned, surfaceContainerHigh fill with AI avatar.
+/// User: right-aligned, indigo-tinted fill with subtle border.
+/// Bot: left-aligned, clean white/dark fill with AI avatar and soft shadow.
 class MessageBubble extends StatelessWidget {
   const MessageBubble({required this.message, this.onRephrase, super.key});
 
@@ -28,9 +27,10 @@ class MessageBubble extends StatelessWidget {
     return _isUser ? _buildUserBubble(context) : _buildBotBubble(context);
   }
 
-  /// User message: right-aligned, primaryContainer bubble.
+  /// User message: right-aligned, indigo-tinted bubble.
   Widget _buildUserBubble(BuildContext context) {
     final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
 
     return Align(
       alignment: Alignment.centerRight,
@@ -49,6 +49,21 @@ class MessageBubble extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppTheme.userBubbleColor(context),
             borderRadius: DesignTokens.chat.userBubbleRadius,
+            border: Border.all(
+              color: theme.colorScheme.primary.withValues(
+                alpha: isLight ? 0.08 : 0.12,
+              ),
+              width: 0.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.primary.withValues(
+                  alpha: isLight ? 0.06 : 0.1,
+                ),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -58,7 +73,7 @@ class MessageBubble extends StatelessWidget {
                 message.content,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: AppTheme.userBubbleTextColor(context),
-                  height: 1.5,
+                  height: 1.55,
                 ),
               ),
               SizedBox(height: DesignTokens.spacing.xs),
@@ -81,8 +96,11 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  /// Bot message: left-aligned, surfaceContainerHigh bubble with avatar.
+  /// Bot message: left-aligned, clean surface bubble with avatar.
   Widget _buildBotBubble(BuildContext context) {
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+
     return Align(
       alignment: Alignment.centerLeft,
       child: ConstrainedBox(
@@ -99,16 +117,28 @@ class MessageBubble extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── AI avatar ──
+              // ── AI avatar with accent ring ──
               Container(
-                width: 32,
-                height: 32,
+                width: 34,
+                height: 34,
                 margin: EdgeInsets.only(top: DesignTokens.spacing.xxs),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AppTheme.accentGradient,
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(1.5),
                 child: ClipOval(
                   child: Image.asset(
                     'assets/images/Image.jpg',
-                    width: 32,
-                    height: 32,
+                    width: 31,
+                    height: 31,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -122,6 +152,21 @@ class MessageBubble extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppTheme.botBubbleColor(context),
                     borderRadius: DesignTokens.chat.botBubbleRadius,
+                    border: Border.all(
+                      color: theme.colorScheme.outlineVariant.withValues(
+                        alpha: isLight ? 0.12 : 0.08,
+                      ),
+                      width: 0.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(
+                          alpha: isLight ? 0.04 : 0.15,
+                        ),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,7 +218,7 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final muted = theme.colorScheme.onSurface.withValues(alpha: 0.55);
+    final muted = theme.colorScheme.onSurface.withValues(alpha: 0.45);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -183,7 +228,7 @@ class _StatusChip extends StatelessWidget {
           style: theme.textTheme.labelSmall?.copyWith(
             color: muted,
             fontSize: DesignTokens.typography.caption,
-            letterSpacing: 0.2,
+            letterSpacing: 0.3,
           ),
         ),
         SizedBox(width: DesignTokens.spacing.xxs),
@@ -206,15 +251,15 @@ class _StatusChip extends StatelessWidget {
         );
       case MessageStatus.streaming:
         return Icon(
-          Icons.more_horiz_rounded,
+          Icons.auto_awesome_rounded,
           size: size,
           color: theme.colorScheme.primary,
         );
       case MessageStatus.complete:
-        return Icon(Icons.check_rounded, size: size, color: muted);
+        return Icon(Icons.done_rounded, size: size, color: muted);
       case MessageStatus.stopped:
         return Icon(
-          Icons.stop_circle_outlined,
+          Icons.pause_circle_outlined,
           size: size,
           color: theme.colorScheme.tertiary.withValues(alpha: 0.7),
         );

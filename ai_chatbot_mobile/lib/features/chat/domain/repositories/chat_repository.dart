@@ -24,11 +24,18 @@ abstract interface class ChatRepository {
     required String targetApp,
   });
 
-  /// Loads the chat history for the given [userId].
+  /// Loads the chat history for the given [userId] and [appCode].
   ///
   /// Returns a list of [Message] entities ordered by timestamp ascending.
   /// Returns an empty list if no history exists.
-  Future<List<Message>> loadHistory({required String userId});
+  Future<List<Message>> loadHistory({
+    required String userId,
+    required String appCode,
+  });
+
+  /// Deletes all chat history for [userId] and [appCode].
+  /// Returns true on success.
+  Future<bool> deleteHistory({required String userId, required String appCode});
 
   /// Generates a new unique conversation identifier (UUID v4).
   String generateConversationId();

@@ -39,10 +39,16 @@ class _InlineThinkingDotsState extends State<InlineThinkingDots>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Icon(
+            Icons.auto_awesome_rounded,
+            size: 13,
+            color: theme.colorScheme.primary.withValues(alpha: 0.5),
+          ),
+          SizedBox(width: DesignTokens.spacing.xxs),
           Text(
             'Thinking',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              color: theme.colorScheme.primary.withValues(alpha: 0.6),
               fontWeight: FontWeight.w500,
             ),
           ),

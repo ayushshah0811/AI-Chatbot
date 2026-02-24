@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../providers/chat_provider.dart';
 import '../providers/chat_state.dart';
+import '../providers/session_provider.dart';
 import '../widgets/error_display.dart';
 import '../widgets/message_input.dart';
 import '../widgets/message_list.dart';
 import '../widgets/new_chat_button.dart';
 import '../widgets/pause_button.dart';
+import '../widgets/restart_button.dart';
 import '../widgets/target_app_selector.dart';
 
 /// Main chat screen — the app's primary interface.
@@ -56,29 +60,69 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         // Transparent — gradient shows through.
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          // ── Leading: Robot logo icon ──
+          // ── Leading: Robot logo icon (tap for logout menu) ──
           leading: Padding(
             padding: EdgeInsets.only(left: DesignTokens.spacing.sm),
             child: Center(
-              child: Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.15),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+              child: PopupMenuButton<String>(
+                tooltip: 'Account menu',
+                position: PopupMenuPosition.under,
+                offset: const Offset(0, 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: DesignTokens.borderRadius.lg,
                 ),
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/images/Image.jpg',
-                    width: 38,
-                    height: 38,
-                    fit: BoxFit.cover,
+                onSelected: (value) async {
+                  if (value == 'logout') {
+                    // Invalidate chat provider and clear session, navigate to login
+                    ref.invalidate(chatProvider);
+                    await ref.read(sessionProvider.notifier).logout();
+                    if (context.mounted) context.go(AppRoutes.login);
+                  }
+                },
+                itemBuilder: (ctx) => [
+                  PopupMenuItem<String>(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.logout_rounded,
+                          size: 18,
+                          color: theme.colorScheme.error,
+                        ),
+                        SizedBox(width: DesignTokens.spacing.sm),
+                        Text(
+                          'Logout',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.error,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: AppTheme.accentGradient,
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(1.5),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/Image.jpg',
+                      width: 35,
+                      height: 35,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
@@ -89,8 +133,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           title: const TargetAppSelector(),
           centerTitle: true,
 
-          // ── Trailing: New Chat button in circular container ──
+          // ── Trailing: Restart + New Chat buttons ──
           actions: [
+            const RestartButton(),
+            SizedBox(width: DesignTokens.spacing.xs),
             Padding(
               padding: EdgeInsets.only(right: DesignTokens.spacing.sm),
               child: const NewChatButton(),

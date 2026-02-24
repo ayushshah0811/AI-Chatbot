@@ -14,14 +14,22 @@ class AppConstants {
 
   /// Available target applications for chat context switching.
   /// Each entry maps an internal ID to its display name.
+  // TODO: Restore original target apps after testing
+  // static const List<TargetAppConfig> targetApps = [
+  //   TargetAppConfig(id: 'STS_LP', displayName: 'STS LP'),
+  //   TargetAppConfig(id: 'TMS', displayName: 'TMS'),
+  //   TargetAppConfig(id: 'QMS', displayName: 'QMS'),
+  // ];
   static const List<TargetAppConfig> targetApps = [
-    TargetAppConfig(id: 'STS_LP', displayName: 'STS LP'),
-    TargetAppConfig(id: 'TMS', displayName: 'TMS'),
-    TargetAppConfig(id: 'QMS', displayName: 'QMS'),
+    TargetAppConfig(id: 'biznet_ctm_intas', displayName: 'Biznet CTM Intas'),
+    TargetAppConfig(id: 'hocco_dms', displayName: 'Hocco DMS'),
+    TargetAppConfig(id: 'biolyte_ltr', displayName: 'Biolyte LTR'),
   ];
 
   /// The default target app selected on first launch.
-  static const String defaultTargetAppId = 'STS_LP';
+  // TODO: Restore original default after testing
+  // static const String defaultTargetAppId = 'STS_LP';
+  static const String defaultTargetAppId = 'biznet_ctm_intas';
 
   // ── Secure Storage Keys ─────────────────────────────────────────────────
 

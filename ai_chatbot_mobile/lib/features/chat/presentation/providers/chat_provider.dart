@@ -24,7 +24,7 @@ part 'chat_provider.g.dart';
 /// All UI state flows through [ChatState].
 @riverpod
 class ChatNotifier extends _$ChatNotifier {
-  late final ChatRepositoryImpl _repository;
+  late ChatRepositoryImpl _repository;
 
   /// The text of the message currently being sent / last attempted.
   /// Used for retry on failure.
@@ -75,6 +75,7 @@ class ChatNotifier extends _$ChatNotifier {
 
     // Await session data (async provider may still be loading on first call)
     final session = await ref.read(sessionProvider.future);
+    if (!ref.mounted) return;
 
     // Clear any previous error and last failed message
     state = state.copyWith(errorMessage: null, lastFailedMessage: null);
@@ -137,6 +138,7 @@ class ChatNotifier extends _$ChatNotifier {
         conversationId: conversation.conversationId,
         targetApp: state.selectedTargetApp.id,
       );
+      if (!ref.mounted) return;
 
       final elapsed = DateTime.now().difference(startTime).inMilliseconds;
 
@@ -181,6 +183,7 @@ class ChatNotifier extends _$ChatNotifier {
         lastResponseTimeMs: elapsed,
       );
     } catch (e) {
+      if (!ref.mounted) return;
       debugPrint('ChatProvider: Send error: $e');
 
       final errorMsg = _userFriendlyError(e);
@@ -240,26 +243,26 @@ class ChatNotifier extends _$ChatNotifier {
 
   // ── Target App ────────────────────────────────────────────────────────
 
-  /// Switches the target app and starts a new conversation.
+  /// Switches the target app.
   ///
-  /// Generates a new conversationId, clears the current messages,
-  /// and updates the selected app.
+  /// Since the backend does not yet segregate messages by app,
+  /// history is only shown for STS_LP (the default). Switching to
+  /// TMS or QMS shows an empty chat. Switching back to STS_LP
+  /// restores the cached conversation.
   Future<void> setTargetApp(TargetApp targetApp) async {
     if (targetApp.id == state.selectedTargetApp.id) return;
 
-    // Persist the target app and generate new conversationId in session
+    // Persist the selected target app
     await ref.read(sessionProvider.notifier).switchTargetApp(targetApp.id);
+    if (!ref.mounted) return;
 
     state = state.copyWith(
       selectedTargetApp: targetApp,
       activeConversation: null,
-      isStreaming: false,
-      isSendEnabled: true,
       errorMessage: null,
-      lastResponseTimeMs: null,
     );
 
-    // Load history for the newly selected target app
+    // Fetch history for the newly selected app
     await loadHistory();
   }
 
@@ -281,6 +284,7 @@ class ChatNotifier extends _$ChatNotifier {
   /// Starts a brand-new conversation, clearing all messages.
   Future<void> newConversation() async {
     await ref.read(sessionProvider.notifier).newConversation();
+    if (!ref.mounted) return;
 
     state = state.copyWith(
       activeConversation: null,
@@ -297,17 +301,66 @@ class ChatNotifier extends _$ChatNotifier {
   /// selected target app unchanged.
   Future<void> startNewSession() => newConversation();
 
+  // ── Restart Session ───────────────────────────────────────────────────
+
+  /// Deletes all chat history on the backend for the current user and
+  /// selected target app, then clears the local conversation.
+  ///
+  /// Returns `true` if the backend deletion succeeded.
+  Future<bool> restartSession() async {
+    final session = await ref.read(sessionProvider.future);
+    if (!ref.mounted) return false;
+    final appCode = state.selectedTargetApp.id;
+
+    final success = await _repository.deleteHistory(
+      userId: session.userId,
+      appCode: appCode,
+    );
+    if (!ref.mounted) return false;
+
+    if (success) {
+      await ref.read(sessionProvider.notifier).newConversation();
+      if (!ref.mounted) return false;
+      if (!ref.mounted) return false;
+
+      state = state.copyWith(
+        activeConversation: null,
+        isStreaming: false,
+        isSendEnabled: true,
+        errorMessage: null,
+        lastResponseTimeMs: null,
+      );
+    }
+
+    return success;
+  }
+
+  /// Clears all in-memory chat state (e.g. on logout or user switch).
+  void clearState() {
+    _pendingMessageText = null;
+    _isCancelled = false;
+    _activeBotMessageId = null;
+    state = ChatState.initial();
+  }
+
   // ── Load History ──────────────────────────────────────────────────────
 
-  /// Loads chat history from the backend for the current user.
+  /// Loads chat history from the backend for the current user and
+  /// currently selected target app.
   ///
   /// Deduplicates messages by ID to prevent showing the same message twice
   /// (e.g. from overlapping history loads or network retries).
   Future<void> loadHistory() async {
     final session = await ref.read(sessionProvider.future);
+    if (!ref.mounted) return;
+    final appCode = state.selectedTargetApp.id;
 
     try {
-      final messages = await _repository.loadHistory(userId: session.userId);
+      final messages = await _repository.loadHistory(
+        userId: session.userId,
+        appCode: appCode,
+      );
+      if (!ref.mounted) return;
       if (messages.isEmpty) return;
 
       // Deduplicate by message ID

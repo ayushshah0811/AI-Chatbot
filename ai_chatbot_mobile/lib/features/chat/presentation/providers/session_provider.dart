@@ -29,8 +29,8 @@ class SessionNotifier extends _$SessionNotifier {
   FutureOr<SessionData> build() async {
     _storage = ref.read(secureStorageServiceProvider);
 
-    // Use a fixed userId that matches the backend
-    const userId = '1';
+    // Read userId from storage (set during login); default to '1'
+    final userId = await _storage.getUserId() ?? '1';
 
     var conversationId = await _storage.getConversationId();
     if (conversationId == null) {
@@ -58,6 +58,7 @@ class SessionNotifier extends _$SessionNotifier {
 
     final newConversationId = UuidGenerator.generate();
     await _storage.saveConversationId(newConversationId);
+    if (!ref.mounted) return;
 
     state = AsyncData(current.copyWith(conversationId: newConversationId));
   }
@@ -75,6 +76,7 @@ class SessionNotifier extends _$SessionNotifier {
     // Generate a new conversation for the new target context
     final newConversationId = UuidGenerator.generate();
     await _storage.saveConversationId(newConversationId);
+    if (!ref.mounted) return;
 
     state = AsyncData(
       current.copyWith(
@@ -85,12 +87,37 @@ class SessionNotifier extends _$SessionNotifier {
   }
 
   /// Replaces the current userId (e.g., after authentication).
+  ///
+  /// Persists to storage **first** so that any concurrent or future
+  /// `build()` reads the correct value, then updates in-memory state
+  /// only if the provider is still alive.
   Future<void> setUserId(String userId) async {
-    final current = state.value;
-    if (current == null) return;
-
+    // Always persist first — if the provider auto-disposes and rebuilds,
+    // build() will read the correct value from storage.
     await _storage.saveUserId(userId);
+
+    // The provider may have been disposed while we awaited storage I/O
+    // (e.g. no widget is watching sessionProvider on the login screen).
+    if (!ref.mounted) return;
+
+    // Wait for any in-progress build() to complete before touching state.
+    final current = await future;
+    if (!ref.mounted) return;
+
     state = AsyncData(current.copyWith(userId: userId));
+  }
+
+  /// Clears all session data (logout).
+  Future<void> logout() async {
+    await _storage.clearAll();
+    if (!ref.mounted) return;
+    state = const AsyncData(
+      SessionData(
+        userId: '',
+        conversationId: '',
+        targetAppId: AppConstants.defaultTargetAppId,
+      ),
+    );
   }
 }
 

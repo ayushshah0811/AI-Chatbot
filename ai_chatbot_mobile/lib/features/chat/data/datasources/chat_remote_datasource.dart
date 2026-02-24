@@ -41,9 +41,13 @@ class ChatRemoteDataSource {
     return _parseSseResponse(raw);
   }
 
-  /// Parses an SSE-formatted response string and extracts message text.
+  /// Parses an SSE-formatted response string and extracts the **last**
+  /// message text only.
+  ///
+  /// The backend sends multiple SSE events including intermediate
+  /// "thinking" / "analyzing" messages. We only need the final one.
   String _parseSseResponse(String raw) {
-    final buffer = StringBuffer();
+    String lastMessage = '';
 
     for (final line in raw.split('\n')) {
       final trimmed = line.trim();
@@ -58,24 +62,27 @@ class ChatRemoteDataSource {
         final text = map['text'] as String?;
 
         if (type == 'message' && text != null && text.isNotEmpty) {
-          buffer.write(text);
+          lastMessage = text;
         }
       } catch (_) {
         // Skip malformed SSE lines
       }
     }
 
-    return buffer.toString();
+    return lastMessage;
   }
 
-  /// Loads the full chat history for the given [userId].
+  /// Loads the full chat history for the given [userId] and [appCode].
   ///
   /// Returns domain [Message] entities.
   /// Returns an empty list if no history exists or on error.
-  Future<List<Message>> loadHistory({required String userId}) async {
+  Future<List<Message>> loadHistory({
+    required String userId,
+    required String appCode,
+  }) async {
     try {
       final response = await _apiClient.get<dynamic>(
-        ApiConstants.historyEndpoint(userId),
+        ApiConstants.historyEndpoint(userId, appCode),
       );
 
       final data = response.data;
@@ -229,5 +236,23 @@ class ChatRemoteDataSource {
       return DateTime.tryParse(value) ?? DateTime.now();
     }
     return DateTime.now();
+  }
+
+  /// Deletes all chat history for the given [userId] and [appCode].
+  ///
+  /// Calls DELETE /api/chat/history/{userId}/{appCode}.
+  /// Returns true on success, false on failure.
+  Future<bool> deleteHistory({
+    required String userId,
+    required String appCode,
+  }) async {
+    try {
+      final response = await _apiClient.delete<dynamic>(
+        ApiConstants.resetHistoryEndpoint(userId, appCode),
+      );
+      return response.statusCode == 200 || response.statusCode == 204;
+    } on DioException {
+      return false;
+    }
   }
 }

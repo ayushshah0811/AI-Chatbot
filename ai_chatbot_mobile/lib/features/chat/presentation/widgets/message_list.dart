@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../domain/entities/message.dart';
 import '../../domain/entities/message_sender.dart';
@@ -103,7 +104,7 @@ class _MessageListState extends State<MessageList> {
       controller: _scrollController,
       padding: EdgeInsets.symmetric(vertical: DesignTokens.spacing.md),
       itemCount: widget.messages.length,
-      separatorBuilder: (_, __) =>
+        separatorBuilder: (context, index) =>
           SizedBox(height: DesignTokens.chat.messageSpacing),
       findItemIndexCallback: (key) {
         if (key is ValueKey<String>) {
@@ -168,7 +169,7 @@ class _MessageListState extends State<MessageList> {
   }
 }
 
-/// Premium empty state — AI-branded welcome screen.
+/// Premium empty state — AI-branded welcome screen with gradient accent.
 class _EmptyState extends StatelessWidget {
   const _EmptyState();
 
@@ -183,27 +184,29 @@ class _EmptyState extends StatelessWidget {
             Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Robot logo — circular to match avatar style.
+                    // Robot logo with gradient ring.
                     Container(
-                      width: 72,
-                      height: 72,
+                      width: 80,
+                      height: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
+                        gradient: AppTheme.accentGradient,
                         boxShadow: [
                           BoxShadow(
                             color: theme.colorScheme.primary.withValues(
-                              alpha: 0.15,
+                              alpha: 0.25,
                             ),
-                            blurRadius: 20,
-                            offset: const Offset(0, 6),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
+                      padding: const EdgeInsets.all(2.5),
                       child: ClipOval(
                         child: Image.asset(
                           'assets/images/Image.jpg',
-                          width: 72,
-                          height: 72,
+                          width: 75,
+                          height: 75,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -228,12 +231,19 @@ class _EmptyState extends StatelessWidget {
                       ),
                       textAlign: TextAlign.center,
                     ),
+                    SizedBox(height: DesignTokens.spacing.lg),
+                    // Subtle sparkle icon
+                    Icon(
+                      Icons.auto_awesome_rounded,
+                      size: 20,
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                    ),
                   ],
                 )
                 .animate()
                 .fadeIn(duration: 600.ms, curve: Curves.easeOut)
                 .slideY(
-                  begin: 0.1,
+                  begin: 0.08,
                   end: 0,
                   duration: 600.ms,
                   curve: Curves.easeOut,

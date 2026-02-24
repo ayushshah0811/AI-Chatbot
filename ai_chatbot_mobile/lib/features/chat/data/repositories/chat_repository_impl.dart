@@ -34,8 +34,19 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<List<Message>> loadHistory({required String userId}) {
-    return _remoteDataSource.loadHistory(userId: userId);
+  Future<List<Message>> loadHistory({
+    required String userId,
+    required String appCode,
+  }) {
+    return _remoteDataSource.loadHistory(userId: userId, appCode: appCode);
+  }
+
+  @override
+  Future<bool> deleteHistory({
+    required String userId,
+    required String appCode,
+  }) {
+    return _remoteDataSource.deleteHistory(userId: userId, appCode: appCode);
   }
 
   @override

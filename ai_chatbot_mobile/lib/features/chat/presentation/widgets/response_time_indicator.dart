@@ -23,7 +23,7 @@ class ResponseTimeIndicator extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.bolt_rounded,
+            Icons.electric_bolt_rounded,
             size: DesignTokens.iconSize.xs,
             color: muted,
           ),

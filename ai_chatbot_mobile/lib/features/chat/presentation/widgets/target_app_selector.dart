@@ -78,8 +78,9 @@ class TargetAppSelector extends ConsumerWidget {
           vertical: DesignTokens.spacing.xs,
         ),
         decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.4),
           border: Border.all(
-            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+            color: theme.colorScheme.primary.withValues(alpha: 0.15),
           ),
           borderRadius: DesignTokens.borderRadius.full,
         ),
@@ -101,8 +102,8 @@ class TargetAppSelector extends ConsumerWidget {
             ),
             SizedBox(width: DesignTokens.spacing.xxs),
             Icon(
-              Icons.keyboard_arrow_down_rounded,
-              size: 20,
+              Icons.unfold_more_rounded,
+              size: 18,
               color: isStreaming
                   ? theme.colorScheme.primary.withValues(alpha: 0.25)
                   : theme.colorScheme.primary.withValues(alpha: 0.5),

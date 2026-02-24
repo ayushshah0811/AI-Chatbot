@@ -19,7 +19,7 @@ class RephraseButton extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.all(DesignTokens.spacing.xxs),
         child: Icon(
-          Icons.edit_rounded,
+          Icons.edit_outlined,
           size: DesignTokens.iconSize.sm,
           color: color,
         ),
